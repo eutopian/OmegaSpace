@@ -13,6 +13,8 @@ import './Home.css'
 require('codemirror/lib/codemirror.css');
 require('codemirror/mode/javascript/javascript');
 let CodeMirror = require('react-codemirror');
+let MirrorConsole = require('codemirror-console');
+let mirror_editor = new MirrorConsole();
 
 class Home extends React.Component {
   constructor(props) {
@@ -22,6 +24,7 @@ class Home extends React.Component {
     this.handleSave = this.handleSave.bind(this);
     this.handleSaveStatus = this.handleSaveStatus.bind(this);
     this.toggleReadOnly = this.toggleReadOnly.bind(this);
+    // this.results = this.results.bind(this);
     // this.valueGetter = this.valueGetter.bind(this);
   }
 
@@ -44,10 +47,11 @@ class Home extends React.Component {
         status = 'Changes not saved.'
       };
       this.setState({text: value, savedStatus: status});
-      console.log(this.refs.editor.getCodeMirror().getValue())
-      // console.log(CodeMirror.props);
-      // console.log(CodeMirror.getValue())
-      // console.log(Object.keys(CodeMirror.defaultProps));
+      // console.log(this.refs.editor.getCodeMirror().getValue())
+
+      console.log(mirror_editor.runInContext({console: console.log(val)}, function(err, res) {
+        if (err) console.log(err)
+      }));
   };
 
   // valueGetter() {
@@ -81,8 +85,11 @@ class Home extends React.Component {
 
   toggleReadOnly() {
     console.log(this.refs.editor.getCodeMirror().getValue())
-    debugger
-    this.refs.editor.getCodeMirror().getValue()
+    this.setState({text: this.refs.editor.getCodeMirror().getValue() })
+  }
+
+  results() {
+    return eval(this.refs.editor.codeMirror.getValue())
   }
 
   render() {
@@ -94,6 +101,9 @@ class Home extends React.Component {
         return savedStatus;
       }
     }
+
+    let resultS = eval(JSON.stringify(this.state.text))
+
     return (
       <div>
         <div className="top-nav">
@@ -120,6 +130,9 @@ class Home extends React.Component {
             <option value="javascript">JavaScript</option>
           </select>
           <button onClick={this.toggleReadOnly}></button>
+        </div>
+        <div>
+          { resultS }
         </div>
         {/* <ReactQuill placeholder={'Start your Omega journey... '} value={this.state.text} onChange={this.handleChange} /> */}
       </div>

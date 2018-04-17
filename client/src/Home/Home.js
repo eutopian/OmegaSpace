@@ -10,6 +10,9 @@ import openSocket from 'socket.io-client';
 const  socket = openSocket('http://localhost:8000');
 
 import './Home.css'
+require('codemirror/lib/codemirror.css');
+require('codemirror/mode/javascript/javascript');
+let CodeMirror = require('react-codemirror');
 
 class Home extends React.Component {
   constructor(props) {
@@ -18,27 +21,38 @@ class Home extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSave = this.handleSave.bind(this);
     this.handleSaveStatus = this.handleSaveStatus.bind(this);
-
+    this.toggleReadOnly = this.toggleReadOnly.bind(this);
+    // this.valueGetter = this.valueGetter.bind(this);
   }
 
   componentDidMount(){
       fetch('/api/gettext')
         .then(res => res.json())
         .then(data => this.setState({ text: data }));
-        socket.on('subscribeToText', (text) => {
-          this.setState({text: text});
-        });
+        // socket.on('subscribeToText', (text) => {
+        //   this.setState({text: text});
+        // });
     };
 
   handleChange(value) {
     let status = '';
+    let val = this.refs.editor.props.value;
+
     if (value.length !== this.state.text.length) {
         console.log("I am Emitting");
-        socket.emit('toText', value);
+        // socket.emit('toText', value);
         status = 'Changes not saved.'
       };
       this.setState({text: value, savedStatus: status});
+      console.log(this.refs.editor.getCodeMirror().getValue())
+      // console.log(CodeMirror.props);
+      // console.log(CodeMirror.getValue())
+      // console.log(Object.keys(CodeMirror.defaultProps));
   };
+
+  // valueGetter() {
+  //   console.log(CodeMirror.getValue());
+  // }
 
   handleSaveStatus(status){
     this.setState({savedStatus: status})
@@ -64,6 +78,13 @@ class Home extends React.Component {
         this.handleSaveStatus('Saved!')
       })
   }
+
+  toggleReadOnly() {
+    console.log(this.refs.editor.getCodeMirror().getValue())
+    debugger
+    this.refs.editor.getCodeMirror().getValue()
+  }
+
   render() {
     let { savedStatus } = this.state;
     let saveStatusRender = () => {
@@ -92,7 +113,15 @@ class Home extends React.Component {
             </a>
           </div>
         </div>
-        <ReactQuill placeholder={'Start your Omega journey... '} value={this.state.text} onChange={this.handleChange} />
+        <CodeMirror ref='editor' value={this.state.text} onChange={this.handleChange} options={{mode: 'javascript', lineNumbers: true}}/>
+        <div style={{ marginTop: 10 }}>
+          <select onChange={this.changeMode} value={this.state.mode}>
+            <option value="markdown">Markdown</option>
+            <option value="javascript">JavaScript</option>
+          </select>
+          <button onClick={this.toggleReadOnly}></button>
+        </div>
+        {/* <ReactQuill placeholder={'Start your Omega journey... '} value={this.state.text} onChange={this.handleChange} /> */}
       </div>
     );
   }

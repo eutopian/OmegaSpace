@@ -27,27 +27,30 @@ class Home extends React.Component {
     this.handleSave = this.handleSave.bind(this);
     this.handleSaveStatus = this.handleSaveStatus.bind(this);
     this.runCode = this.runCode.bind(this);
+    this.moveCursorToEnd = this.moveCursorToEnd.bind(this)
   }
 
   componentDidMount(){
       fetch('/api/gettext')
         .then(res => res.json())
         .then(data => this.setState({ text: data }));
-        // socket.on('subscribeToText', (text) => {
-        //   this.setState({text: text});
-        // });
+        socket.on('subscribeToText', (text) => {
+          this.setState({text: text});
+        });
     };
 
   handleChange(value) {
     let status = '';
-    let val = this.refs.editor.props.value;
+    // let val = this.refs.editor.props.value;
 
     if (value.length !== this.state.text.length) {
-      console.log("I am Emitting");
-      // socket.emit('toText', value);
+      // console.log("I am Emitting");
+      socket.emit('toText', value);
       status = 'Changes not saved.'
     };
-    this.setState({text: value, savedStatus: status});  
+    // let newKey = this.state.key
+    this.setState({text: value, savedStatus: status}); 
+    // this.refs.editor.getCodeMirror().codemirrorValueChanged(this.state.text, this.state.text)
   };
 
   handleSaveStatus(status){
@@ -58,6 +61,17 @@ class Home extends React.Component {
       },2000)
     }
   }
+
+  moveCursorToEnd(el) {
+    if (typeof el.selectionStart == "number") {
+        el.selectionStart = el.selectionEnd = el.value.length;
+    } else if (typeof el.createTextRange != "undefined") {
+        el.focus();
+        var range = el.createTextRange();
+        range.collapse(false);
+        range.select();
+    }
+}
 
   handleSave() {
     this.handleSaveStatus('Loading...')
@@ -82,8 +96,10 @@ class Home extends React.Component {
     // const sandbox = {}
     // vm.createContext(sandbox)
     // let result = vm.runInContext(text, sandbox)
-    let result = vm.runInNewContext(`${text}`, sandbox)
-    this.setState({execution: result})
+    // let result = vm.runInNewContext(`${text}`, sandbox)
+    let result = eval(text)
+    
+    this.setState({execution: JSON.stringify(result)})
   }
 
   render() {
@@ -115,13 +131,16 @@ class Home extends React.Component {
             </a>
           </div>
         </div>
-        <CodeMirror ref='editor' value={this.state.text} onChange={this.handleChange} options={{mode: 'javascript', lineNumbers: true}}/>
+        <CodeMirror ref='editor' key={this.state.text} value={this.state.text} onChange={(e) => {this.handleChange(e)}} options={{mode: 'javascript', lineNumbers: true, autofocus: true}} onFocus={(e) => this.moveCursorToEnd(e)}/>
+        { this.state.text }
         <div style={{ marginTop: 10 }}>
           <button onClick={this.runCode}>Run Code</button>
         </div>
         <div>
-        
-          { this.state.execution }
+        {/* <CodeMirror ref='editor' value={this.state.execution}  options={{mode: 'javascript', lineNumbers: true}}/> */}
+          {this.state.execution}
+          
+          {/* { this.state.execution } */}
         </div>
         {/* <ReactQuill placeholder={'Start your Omega journey... '} value={this.state.text} onChange={this.handleChange} /> */}
       </div>
